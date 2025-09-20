@@ -6,6 +6,7 @@ pandas==2.2.2
 xarray==2024.3.0
 netCDF4==1.7.1
 scipy==1.13.1
+gsw==3.6.20   # Scientific depth calculations
 
 # Visualization
 matplotlib==3.9.0
@@ -18,16 +19,10 @@ notebook==7.2.1
 
 # Utilities
 tqdm==4.66.4
-
-# Optional (interactive apps / dashboards)
-plotly==5.22.0
-streamlit==1.36.0
-
-# env
-python-dotenv
-
-# scientific depth calculations
-gsw==3.6.0
-
-# CPU usage and for model creation
 joblib==1.5.2
+python-dotenv==1.0.1
+pathlib==1.0.1
+hashlib
+ftplib
+concurrent.futures
+os
