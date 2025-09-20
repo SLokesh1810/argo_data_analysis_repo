@@ -1,11 +1,13 @@
 # Core
 numpy==1.26.4
 pandas==2.2.2
+pyarrow==21.0.0
+sqlalchemy
+psycopg2-binary
 
 # NetCDF + scientific
 xarray==2024.3.0
-netCDF4==1.7.1
-scipy==1.13.1
+scipy==1.16.0
 gsw==3.6.20   # Scientific depth calculations
 
 # Visualization
@@ -22,7 +24,7 @@ tqdm==4.66.4
 joblib==1.5.2
 python-dotenv==1.0.1
 pathlib==1.0.1
-hashlib
-ftplib
-concurrent.futures
-os
+
+# Chroma
+chromadb
+sentence-transformers
