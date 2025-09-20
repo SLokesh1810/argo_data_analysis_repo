@@ -1,0 +1,22 @@
+/* Custom CSS for a brighter dataframe with higher specificity */
+
+/* Targets the main dataframe container */
+[data-testid="stDataFrame"] {
+    background-color: #333333;
+}
+
+/* Targets all text inside the dataframe container to set a bright white color */
+[data-testid="stDataFrame"] * {
+    color: #FFFFFF !important;
+}
+
+/* Targets the header cells specifically to give them a slightly different background and text color */
+[data-testid="stDataFrame"] .header-row th {
+    background-color: #444444 !important;
+    color: #DDDDDD !important;
+}
+
+/* Targets the individual data cells */
+[data-testid="stDataFrame"] .data-cell {
+    background-color: #333333 !important;
+}
