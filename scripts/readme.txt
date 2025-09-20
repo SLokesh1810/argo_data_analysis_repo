@@ -50,6 +50,7 @@ EMAIL=your_email@example.com
 BASE_DIR=path_to_datas_raw
 RAW_ROOT=path_to_datas_raw/incois_raw
 OUT_ROOT=path_to_datas_processed
+POSTGRES_URL=postgresql://postgres:your_password@localhost:5432/argo_db
 ```
 
 ---
@@ -73,3 +74,4 @@ Tips
 
 * FTP allows limited users; if you see `421 too many users`, retry later or reduce `MAX_WORKERS`.
 * Only updated floats are downloaded/processed to save time.
+
