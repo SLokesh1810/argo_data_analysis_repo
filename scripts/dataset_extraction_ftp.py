@@ -1,30 +1,42 @@
 import os
-from ftplib import FTP, error_perm
+from pathlib import Path
+from ftplib import FTP, error_perm, error_temp
 from tqdm import tqdm
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import multiprocessing
 import hashlib
 from dotenv import load_dotenv
+import time
 
 load_dotenv()
 
-# Directories
-NORMAL_DIR = os.path.join('BASE_DIR', "normal")
-BGC_DIR = os.path.join('BASE_DIR', "bgc")
 MAX_WORKERS = multiprocessing.cpu_count()
+MAX_RETRIES = 10
+RETRY_DELAY = 120  # seconds = 2 minutes
 
 # FTP info
 FTP_HOST = "ftp.ifremer.fr"
 FTP_ROOT = "/ifremer/argo/dac/incois"
 
-def connect_ftp():
-    ftp = FTP(FTP_HOST)
-    ftp.login(user="anonymous", passwd=os.getenv("EMAIL"))
-    return ftp
+def connect_ftp_with_retry():
+    retries = 0
+    while retries < MAX_RETRIES:
+        try:
+            ftp = FTP(FTP_HOST)
+            ftp.login(user="anonymous", passwd=os.getenv("EMAIL"))
+            return ftp
+        except error_temp as e:
+            if "421" in str(e):  # Too many users
+                retries += 1
+                print(f"FTP busy (421). Retry {retries}/{MAX_RETRIES} in {RETRY_DELAY} seconds...")
+                time.sleep(RETRY_DELAY)
+            else:
+                raise
+    raise ConnectionError(f"Could not connect to FTP after {MAX_RETRIES} retries due to busy server.")
 
 def list_float_ids():
     """List all float_id directories under INCOIS DAC"""
-    ftp = connect_ftp()
+    ftp = connect_ftp_with_retry()
     ftp.cwd(FTP_ROOT)
     dirs = ftp.nlst()
     ftp.quit()
@@ -38,7 +50,7 @@ def file_hash(path):
             hasher.update(chunk)
     return hasher.hexdigest()
 
-def download_float_if_meta_changed(float_id: str, force_download: bool = False):
+def download_float_if_meta_changed(float_id: str, BGC_DIR, NORMAL_DIR, force_download : bool = False):
     """
     Downloads:
     - <id>_meta.nc
@@ -48,7 +60,7 @@ def download_float_if_meta_changed(float_id: str, force_download: bool = False):
     results = []
     ftp = None
     try:
-        ftp = connect_ftp()
+        ftp = connect_ftp_with_retry()
         ftp.cwd(f"{FTP_ROOT}/{float_id}")
         files = ftp.nlst()
 
@@ -119,12 +131,12 @@ def download_float_if_meta_changed(float_id: str, force_download: bool = False):
             except Exception:
                 pass
 
-def download_all_floats():
+def download_all_floats(BGC_DIR,NORMAL_DIR):
     float_ids = list_float_ids()
     results = []
 
     with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
-        futures = {executor.submit(download_float_if_meta_changed, fid): fid for fid in float_ids}
+        futures = {executor.submit(download_float_if_meta_changed, fid, BGC_DIR, NORMAL_DIR): fid for fid in float_ids}
         for future in tqdm(as_completed(futures), total=len(futures), desc="Processing floats"):
             fid = futures[future]
             try:
@@ -134,9 +146,3 @@ def download_all_floats():
                 results.append(f"Error {fid}: {e}")
 
     return results
-
-if __name__ == "__main__":
-    msgs = download_all_floats()
-    print("\nSummary (first 20 messages):")
-    for msg in msgs[:20]:
-        print("   ", msg)
