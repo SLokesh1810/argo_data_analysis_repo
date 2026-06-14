@@ -1,30 +1,30 @@
-# Core
-numpy==1.26.4
-pandas==2.2.2
+# Core data
+numpy==2.3.2
+pandas==2.3.2
 pyarrow==21.0.0
-sqlalchemy
-psycopg2-binary
 
-# NetCDF + scientific
-xarray==2024.3.0
-scipy==1.16.0
-gsw==3.6.20   # Scientific depth calculations
+# PostgreSQL
+sqlalchemy==2.0.42
+psycopg2-binary==2.9.11
 
-# Visualization
-matplotlib==3.9.0
-seaborn==0.13.2
-cartopy==0.23.0
+# NetCDF preprocessing
+xarray==2025.7.1
+netcdf4==1.7.2
+gsw==3.6.20
 
-# Jupyter
-jupyterlab==4.2.1
-notebook==7.2.1
+# Vector store / embeddings
+chromadb==1.0.15
+sentence-transformers==5.1.0
+
+# Streamlit app
+streamlit==1.48.1
+plotly==6.2.0
 
 # Utilities
-tqdm==4.66.4
-joblib==1.5.2
-python-dotenv==1.0.1
-pathlib==1.0.1
+tqdm==4.67.1
+python-dotenv==1.1.1
 
-# Chroma
-chromadb
-sentence-transformers
+# Analysis
+jupyterlab==4.4.6
+notebook==7.4.5
+ipykernel==6.30.1
