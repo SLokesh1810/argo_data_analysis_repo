@@ -7,7 +7,6 @@ import numpy as np
 import gsw
 from tqdm import tqdm
 import hashlib
-from itertools import islice
 
 # -------------------------------
 # Configuration

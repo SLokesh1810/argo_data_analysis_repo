@@ -146,3 +146,91 @@ def download_all_floats(BGC_DIR,NORMAL_DIR):
                 results.append(f"Error {fid}: {e}")
 
     return results
+
+def check_new_data(BGC_DIR, NORMAL_DIR):
+    """
+    Checks how many float metadata files have changed.
+    Returns:
+        changed_count: int
+        changed_floats: list[str]
+    """
+    float_ids = list_float_ids()
+    changed_floats = []
+    def check_single_float(float_id):
+        ftp = None
+        try:
+            ftp = connect_ftp_with_retry()
+            ftp.cwd(f"{FTP_ROOT}/{float_id}")
+            files = ftp.nlst()
+            meta_file = f"{float_id}_meta.nc"
+            if meta_file not in files:
+                return None
+
+            # Detect BGC
+            is_bgc = f"{float_id}_Sprof.nc" in files
+            out_base = BGC_DIR if is_bgc else NORMAL_DIR
+            out_dir = os.path.join(out_base, float_id)
+            os.makedirs(out_dir, exist_ok=True)
+            local_meta = os.path.join(out_dir, meta_file)
+
+            # -----------------------------
+            # Get remote modified time
+            # -----------------------------
+            remote_mdtm = ftp.sendcmd(
+                f"MDTM {meta_file}"
+            )
+            remote_timestamp = remote_mdtm.split()[1]
+
+            # -----------------------------
+            # Compare with local timestamp
+            # -----------------------------
+            timestamp_file = local_meta + ".timestamp"
+
+            if os.path.exists(timestamp_file):
+                with open(timestamp_file, "r") as f:
+                    local_timestamp = f.read().strip()
+                if local_timestamp == remote_timestamp:
+                    return None
+
+            # Save new timestamp
+            with open(timestamp_file, "w") as f:
+                f.write(remote_timestamp)
+
+            return float_id
+
+        except Exception as e:
+            print(f"Check failed for {float_id}: {e}")
+            return None
+
+        finally:
+            if ftp:
+                try:
+                    ftp.quit()
+                except Exception:
+                    pass
+
+    # ---------------------------------
+    # Parallel execution
+    # ---------------------------------
+    with ThreadPoolExecutor(
+        max_workers=MAX_WORKERS
+    ) as executor:
+
+        futures = {
+            executor.submit(check_single_float, fid): fid
+            for fid in float_ids
+        }
+
+        for future in tqdm(
+            as_completed(futures),
+            total=len(futures),
+            desc="Checking float updates"
+        ):
+
+            result = future.result()
+            if result is not None:
+                changed_floats.append(result)
+
+    changed_count = len(changed_floats)
+    print(f"{changed_count} floats changed.")
+    return changed_count, changed_floats
